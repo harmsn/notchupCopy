@@ -6,7 +6,7 @@ import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App style={{ height: '100%', position: 'absolute', left: '0px', width: '100%', overflow: 'hidden'}}/>
   </React.StrictMode>,
   document.getElementById('root')
 );
