@@ -1,11 +1,10 @@
 import React,{useState,useEffect} from 'react';
 import axios from 'axios';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Field } from 'formik';
 import * as Yup from 'yup';
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
-import { Dropdown,Button } from 'react-bootstrap';
-import Loader from './reusable-components/loader.jsx'
-import GlobalStyle from './css/global.js';
+import { Button} from 'react-bootstrap';
+import Skeleton from 'react-loading-skeleton';
 import './App.css';
 const Register = Yup.object().shape({
   parentsName: Yup.string()
@@ -20,7 +19,7 @@ const Register = Yup.object().shape({
     .email('Invalid email')
     .required('Required'),
   childAge : Yup.number().typeError('must be number').required('required'),
-  parentContact : Yup.number().typeError('must be anumber').required('required'),
+  parentContact : Yup.string().matches(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/ , 'Please enter a valid number').required('required'),
 
 });
 const Main = () => {
@@ -32,12 +31,10 @@ const Main = () => {
   let course = undefined;
   let myTime = [];
   async function fetchData() {
-    console.log('vfvf');
     const res = await axios("https://script.google.com/macros/s/AKfycbzJ8Nn2ytbGO8QOkGU1kfU9q50RjDHje4Ysphyesyh-osS76wep/exec");
     setData(res.data);
   }
   useEffect(() => {
-    
     fetchData();
   },[]);
   function setCourseFunction(e){
@@ -63,7 +60,11 @@ const Main = () => {
       d.setDate(14);
       d.setMonth(7);
       let  s1 = d.getMonth().toString()+'/'+d.getDate().toString()+'/'+d.getFullYear().toString();
+      let hr='10';
+      let min="30";
       myMap.push(s1);
+      let obj = {day : s1 ,hours:hr,minutes:min};
+      myTime.push(obj);
       let unique = [...new Set(myMap)];
       setDate(unique);
       setDay(myTime)
@@ -75,15 +76,14 @@ const Main = () => {
     let selectedDate = date1.getDate();
     let todayDate = new Date();
     let s = todayDate.getDate();
-    let v = selectedDate-s;
     let Difference_In_Time = todayDate.getTime() - date1.getTime(); 
     let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
-    /*if(Difference_In_Days>7) {
-      alert('maximum difference cant be greater than 7 days')
+    if(Difference_In_Days>7) {
+      let str = 'Maximum delay is 7 days';
+      alert(str);
       return;
-    }*/
+    }
     for(let i=0;i<Day.length;i++){
-      console.log(Day[i]);
       if(Day[i].day===e){
         let obj = { hours : Day[i].hours, minutes: Day[i].minutes};
         map.push(obj);
@@ -101,13 +101,17 @@ const Main = () => {
     console.log(date1);
     let diff =(date1.getTime() - date.getTime()) / 1000;
     diff /= 60;
-    console.log(Math.abs(Math.round(diff)));
+    let totMin = Math.abs(Math.round(diff));
+    if(totMin<240){
+      alert('Earliest slot we can show should be minimum 4 hours from now');
+    }
     return;
   }
   return (
     <div>
-    {(data.length===0)? <Loader/> :
-      <section className = 'main'>
+    {(data.length===0) ?   <Skeleton circle = {true} width = {150} height = {150} style={{margin: 'auto',
+    display: 'block'}} count={1}/> :
+      <div className = 'main'>
         <div className="register">Book a trail on <a style={{color:'white'}} href="http://notchup.co/">notchUp</a></div>
         <div className="form">
           <Formik
@@ -135,9 +139,10 @@ const Main = () => {
               validationSchema
             }) => (
                <form onSubmit={handleSubmit} style={{height:'100%'}}>
-                <p className="heading">Name of Parent</p>
+                <p className="heading">Parent's name</p>
                 <Field
                   className="input"
+                  placeHolder ="Parent's Name"
                   type="text"
                   name="parentsName"
                   onChange={handleChange}
@@ -147,9 +152,10 @@ const Main = () => {
                 {touched.parentsName && errors.parentsName &&
                   <p style={{ fontSize: 20, color: 'red',textAlign : 'center' }}>{errors.parentsName}</p>
                 }
-                <p className="heading">Email of Parent</p>
+                <p className="heading">Parent's E-mail</p>
                 <Field
                   type="text"
+                  placeHolder ="Parent's Email"
                   className="input"
                   name="parentsEmail"
                   onChange={handleChange}
@@ -159,9 +165,10 @@ const Main = () => {
                 {touched.parentsEmail && errors.parentsEmail &&
                   <p style={{ fontSize: 20, color: 'red',textAlign : 'center' }}>{errors.parentsEmail}</p>
                 }
-                <p className="heading">Contact number the Parent</p>
+                <p className="heading">Parent's Contact Number</p>
                 <Field
                   type="text"
+                  placeHolder ="Parent's Contact Number"
                   className="input"
                   name="parentContact"
                   onChange={handleChange}
@@ -174,6 +181,7 @@ const Main = () => {
                 <p className="heading">Child's Name</p>
                 <Field
                   type="text"
+                  placeHolder ="Child's Name"
                   className="input"
                   name="childName"
                   onChange={handleChange}
@@ -183,9 +191,10 @@ const Main = () => {
                 {touched.childName && errors.childName &&
                   <p style={{ fontSize: 20, color: 'red',textAlign : 'center' }}>{errors.childName}</p>
                 }
-                <p className="heading">Age of child</p>
+                <p className="heading">Child's Age</p>
                 <Field
                   type="text"
+                  placeHolder ="Child's Age"
                   className="input"
                   name="childAge"
                   onChange={handleChange}
@@ -195,10 +204,11 @@ const Main = () => {
                 {touched.childAge && errors.childAge &&
                   <p style={{ fontSize: 20, color: 'red',textAlign : 'center' }}>{errors.childAge}</p>
                 }
-                <p className="heading">Select course</p>
+                <p className="selectionHeading">Select course</p>
                 <div className="selection">
                   <select 
                     value = {course}
+                    className = "selectionClass"
                     onChange={(e) => setCourseFunction(e.target.value)}
                   >
                     <option value={data[0].course_id}>{data[0].course_name}</option>
@@ -208,14 +218,14 @@ const Main = () => {
                     <option value={data[4].course_id}>{data[4].course_name}</option>
                   </select>
                 </div>
-                <p className="heading">Select Date</p>
+                <p className="selectionHeading">Select Date</p>
                 <div className="selection">
-                  {date.length === 0 ? <select> Date
+                  {date.length === 0 ? <select className = "selectionClass"> Date
                     <option >Please select Course</option>
                   </select>
                   : 
                     <div>
-                      <select onChange={(e) => dateSelectFunction(e.target.value)}>
+                      <select className = "selectionClass" onChange={(e) => dateSelectFunction(e.target.value)}>
                         {date.map((val,index) =>{
                             return(<option key={index} value={val}>{val}</option>)
                         })}
@@ -223,14 +233,14 @@ const Main = () => {
                     </div>
                   }
                 </div>
-                <p className="heading">Select Slot</p>
-                <div>
-                  {time.length === 0 ? <select className="selection"> select date
+                <p className="selectionHeading">Select Slot</p>
+                <div className="selection">
+                  {time.length === 0 ? <select className = "selectionClass"> select date
                     <option >Please select date</option>
                   </select>
                   : 
                     <div>
-                      <select onChange={(e) => timeSelectFunction(e.target)}>
+                      <select className = "selectionClass" onChange={(e) => timeSelectFunction(e.target)}>
                         {time.map((val,index) =>{
                             return(<option key={index} value={val}>{val.hours+':'+val.minutes}</option>)
                         })}
@@ -239,14 +249,14 @@ const Main = () => {
                   }
                 </div>
                 {errors.password && touched.password && errors.password}
-                <Button  variant="outline-primary" style={{marginTop:'20px',marginLeft:'38%'}} type="submit" disabled={isSubmitting}>
+                <Button  variant="outline-primary" className='button' type="submit" disabled={isSubmitting}>
                   Submit
                 </Button>
               </form>
             )}
           </Formik>
         </div>
-      </section>
+      </div>
     }
     </div>
   );
