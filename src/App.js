@@ -81,7 +81,7 @@ const Main = () => {
     if(Difference_In_Days>7) {
       let str = 'Maximum delay is 7 days';
       alert(str);
-      return;
+      //return;
     }
     for(let i=0;i<Day.length;i++){
       if(Day[i].day===e){
